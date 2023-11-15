@@ -1,0 +1,5 @@
+Flask
+redis-py-cluster
+boto3
+pyjwt
+flask_httpauth

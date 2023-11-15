@@ -1,0 +1,22 @@
+*.js
+!jest.config.js
+*.d.ts
+node_modules
+venv
+.venv
+__pycache__
+cdk.context.json
+
+.vscode
+.idea
+out
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+
+source/cdk/templates/template_cell.yaml
+*.apikey
+
+source/package.json
+source/package-lock.json

@@ -1,0 +1,152 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Pass",
+  "States": {
+    "Pass": {
+      "Type": "Pass",
+      "Next": "DynamoDB PutItem",
+      "Parameters": {
+        "stackName.$": "States.Format('Cellular-Cell-{}', $.cellId)",
+        "cellId.$": "$.cellId",
+        "templateUrl.$": "$.templateUrl",
+        "stage.$": "$.stage",
+        "imageuri.$": "$.imageuri"
+      }
+    },
+    "DynamoDB PutItem": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:putItem",
+      "Parameters": {
+        "TableName": "Cellular-Routing-Cells",
+        "Item": {
+          "cell_id": {
+            "S.$": "$.cellId"
+          },
+          "stackName": {
+            "S.$": "$.stackName"
+          },
+          "stackStatus": {
+            "S": "creating"
+          },
+          "sfn-execution-id": {
+            "S.$": "$$.Execution.Id"
+          },
+          "stage": {
+            "S.$": "$.stage"
+          }
+        }
+      },
+      "Next": "CreateStack",
+      "ResultPath": null
+    },
+    "CreateStack": {
+      "Type": "Task",
+      "Next": "Wait",
+      "Parameters": {
+        "StackName.$": "$.stackName",
+        "TemplateURL.$": "$.templateUrl",
+        "Capabilities": [
+          "CAPABILITY_NAMED_IAM"
+        ],
+        "Parameters": [
+          {
+            "ParameterKey": "cellid",
+            "ParameterValue.$": "$.cellId"
+          },
+          {
+            "ParameterKey": "imageuri",
+            "ParameterValue.$": "$.imageuri"
+          }
+        ]
+      },
+      "Resource": "arn:aws:states:::aws-sdk:cloudformation:createStack",
+      "ResultPath": null,
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailed"
+          ],
+          "Next": "DynamoDB UpdateItem (1)",
+          "ResultPath": "$.error"
+        }
+      ]
+    },
+    "Wait": {
+      "Type": "Wait",
+      "Seconds": 5,
+      "Next": "DescribeStacks"
+    },
+    "DescribeStacks": {
+      "Type": "Task",
+      "Parameters": {
+        "StackName.$": "$.stackName"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:cloudformation:describeStacks",
+      "Next": "Choice",
+      "ResultSelector": {
+        "state.$": "$.Stacks[0].StackStatus"
+      },
+      "ResultPath": "$.result"
+    },
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.result.state",
+          "StringEquals": "CREATE_IN_PROGRESS",
+          "Next": "Wait"
+        },
+        {
+          "Variable": "$.result.state",
+          "StringEquals": "CREATE_COMPLETE",
+          "Next": "DynamoDB UpdateItem"
+        }
+      ],
+      "Default": "DynamoDB UpdateItem (1)"
+    },
+    "DynamoDB UpdateItem (1)": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "TableName": "Cellular-Routing-Cells",
+        "Key": {
+          "cell_id": {
+            "S.$": "$.cellId"
+          }
+        },
+        "UpdateExpression": "SET stackStatus = :s",
+        "ExpressionAttributeValues": {
+          ":s": {
+            "S": "create_failed"
+          }
+        }
+      },
+      "Next": "Fail"
+    },
+    "DynamoDB UpdateItem": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "TableName": "Cellular-Routing-Cells",
+        "Key": {
+          "cell_id": {
+            "S.$": "$.cellId"
+          }
+        },
+        "UpdateExpression": "SET stackStatus = :s",
+        "ExpressionAttributeValues": {
+          ":s": {
+            "S": "active"
+          }
+        }
+      },
+      "Next": "Success"
+    },
+    "Fail": {
+      "Type": "Fail"
+    },
+    "Success": {
+      "Type": "Succeed"
+    }
+  }
+}

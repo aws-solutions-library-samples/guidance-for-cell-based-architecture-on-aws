@@ -1,0 +1,4 @@
+Flask
+boto3
+pyjwt
+Flask-HTTPAuth

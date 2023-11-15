@@ -1,0 +1,156 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Map",
+  "States": {
+  "Map": {
+    "Type": "Map",
+    "Next": "Choice (3)",
+    "Parameters": {
+      "cellId.$": "$$.Map.Item.Value",
+      "waitseconds.$": "$.waitseconds"
+    },
+    "Iterator": {
+
+  "StartAt": "Pass",
+  "States": {
+    "Pass": {
+      "Type": "Pass",
+      "Next": "GetCanary",
+      "Parameters": {
+        "cellId.$": "$.cellId",
+        "canaryname.$": "States.Format('cell-canary-{}', $.cellId)",
+        "waitseconds.$": "$.waitseconds"
+      }
+    },
+    "GetCanary": {
+      "Type": "Task",
+      "Next": "Choice (1)",
+      "Parameters": {
+        "Name.$": "$.canaryname"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:synthetics:getCanary",
+      "ResultPath": "$.canary",
+      "ResultSelector": {
+        "status.$": "$.Canary.Status.State"
+      }
+    },
+    "Choice (1)": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.canary.status",
+          "StringEquals": "RUNNING",
+          "Next": "Wait"
+        }
+      ],
+      "Default": "StartCanary"
+    },
+    "StartCanary": {
+      "Type": "Task",
+      "Next": "Wait",
+      "Parameters": {
+        "Name.$": "$.canaryname"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:synthetics:startCanary",
+      "ResultPath": null
+    },
+    "Wait": {
+      "Type": "Wait",
+      "Next": "GetCanaryRuns",
+      "SecondsPath": "$.waitseconds"
+    },
+    "GetCanaryRuns": {
+      "Type": "Task",
+      "Parameters": {
+        "Name.$": "$.canaryname",
+        "MaxResults": 1
+      },
+      "Resource": "arn:aws:states:::aws-sdk:synthetics:getCanaryRuns",
+      "ResultPath": "$.lastrun",
+      "ResultSelector": {
+        "Status.$": "$.CanaryRuns[0].Status",
+        "Timeline.$": "$.CanaryRuns[0].Timeline"
+      },
+      "Next": "Choice"
+    },
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.lastrun.Status.State",
+          "StringEquals": "PASSED",
+          "Next": "Success"
+        }
+      ],
+      "Default": "Fail"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+},
+"ItemsPath": "$.cellIds",
+  "Catch": [
+    {
+      "ErrorEquals": [
+        "States.ALL"
+      ],
+      "Next": "Choice (2)",
+      "ResultPath": "$.error"
+    }
+  ],
+  "ResultPath": "$.map"
+},
+"Choice (3)": {
+  "Type": "Choice",
+  "Choices": [
+    {
+      "Variable": "$.pipeline_id",
+      "IsPresent": true,
+      "Next": "PutJobSuccessResult"
+    }
+  ],
+  "Default": "Success (1)"
+},
+"PutJobSuccessResult": {
+  "Type": "Task",
+  "Parameters": {
+    "JobId.$": "$.pipeline_id"
+  },
+  "Resource": "arn:aws:states:::aws-sdk:codepipeline:putJobSuccessResult",
+  "Next": "Success (1)"
+},
+"Choice (2)": {
+  "Type": "Choice",
+  "Choices": [
+    {
+      "Variable": "$.pipeline_id",
+      "IsPresent": true,
+      "Next": "PutJobFailureResult (1)"
+    }
+  ],
+  "Default": "Fail (1)"
+},
+"PutJobFailureResult (1)": {
+  "Type": "Task",
+  "Next": "Fail (1)",
+  "Parameters": {
+    "FailureDetails": {
+      "Message": "Failed",
+      "Type": "JobFailed"
+    },
+    "JobId.$": "$.pipeline_id"
+  },
+  "Resource": "arn:aws:states:::aws-sdk:codepipeline:putJobFailureResult"
+},
+"Fail (1)": {
+  "Type": "Fail"
+},
+"Success (1)": {
+  "Type": "Succeed"
+}
+}
+}

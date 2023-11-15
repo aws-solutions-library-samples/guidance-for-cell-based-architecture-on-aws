@@ -1,0 +1,255 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Map",
+  "States": {
+    "Map": {
+      "Type": "Map",
+      "Next": "Choice (3)",
+      "Parameters": {
+        "cellId.$": "$$.Map.Item.Value",
+        "templateUrl.$": "$.templateUrl"
+      },
+      "Iterator": {
+        "StartAt": "Pass",
+        "States": {
+          "Pass": {
+            "Type": "Pass",
+            "Next": "DynamoDB UpdateItem",
+            "Parameters": {
+              "stackName.$": "States.Format('Cellular-Cell-{}', $.cellId)",
+              "cellId.$": "$.cellId",
+              "templateUrl.$": "$.templateUrl"
+            }
+          },
+          "DynamoDB UpdateItem": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+              "TableName": "Cellular-Routing-Cells",
+              "Key": {
+                "cell_id": {
+                  "S.$": "$.cellId"
+                }
+              },
+              "UpdateExpression": "SET stackStatus = :s",
+              "ExpressionAttributeValues": {
+                ":s": {
+                  "S": "updating"
+                }
+              },
+              "ConditionExpression": "attribute_exists(cell_id)"
+            },
+            "Next": "UpdateStack",
+            "ResultPath": null
+          },
+          "UpdateStack": {
+            "Type": "Task",
+            "Next": "Wait",
+            "Parameters": {
+              "StackName.$": "$.stackName",
+              "TemplateURL.$": "$.templateUrl",
+              "Capabilities": [
+                "CAPABILITY_NAMED_IAM"
+              ],
+              "Parameters": [
+                {
+                  "ParameterKey": "cellid",
+                  "ParameterValue.$": "$.cellId"
+                },
+                {
+                  "ParameterKey": "imageuri",
+                  "UsePreviousValue": "true"
+                }
+              ]
+            },
+            "Resource": "arn:aws:states:::aws-sdk:cloudformation:updateStack",
+            "ResultPath": null,
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "States.TaskFailed"
+                ],
+                "Next": "Choice (1)",
+                "ResultPath": "$.error"
+              }
+            ]
+          },
+          "Choice (1)": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.error.Cause",
+                "StringMatches": "No updates are to be performed*",
+                "Next": "DDB Update Success"
+              }
+            ],
+            "Default": "DDB Update Failed"
+          },
+          "Wait": {
+            "Type": "Wait",
+            "Seconds": 5,
+            "Next": "DescribeStacks"
+          },
+          "DescribeStacks": {
+            "Type": "Task",
+            "Parameters": {
+              "StackName.$": "$.stackName"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:cloudformation:describeStacks",
+            "Next": "Choice",
+            "ResultSelector": {
+              "state.$": "$.Stacks[0].StackStatus"
+            },
+            "ResultPath": "$.result"
+          },
+          "Choice": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Or": [
+                  {
+                    "Variable": "$.result.state",
+                    "StringEquals": "UPDATE_IN_PROGRESS"
+                  },
+                  {
+                    "Variable": "$.result.state",
+                    "StringEquals": "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS"
+                  }
+                ],
+                "Next": "Wait"
+              },
+              {
+                "Variable": "$.result.state",
+                "StringEquals": "UPDATE_COMPLETE",
+                "Next": "DDB Update Success"
+              }
+            ],
+            "Default": "DDB Update Failed"
+          },
+          "DDB Update Failed": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+              "TableName": "Cellular-Routing-Cells",
+              "Key": {
+                "cell_id": {
+                  "S.$": "$.cellId"
+                }
+              },
+              "UpdateExpression": "SET stackStatus = :s",
+              "ExpressionAttributeValues": {
+                ":s": {
+                  "S": "update_failed"
+                }
+              },
+              "ConditionExpression": "attribute_exists(cell_id)"
+            },
+            "Next": "Pass (1)",
+            "ResultPath": null
+          },
+          "Pass (1)": {
+            "Type": "Pass",
+            "Next": "Fail",
+            "Parameters": {
+              "cellId.$": "$.cellId",
+              "result": "failure"
+            }
+          },
+          "DDB Update Success": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+              "TableName": "Cellular-Routing-Cells",
+              "Key": {
+                "cell_id": {
+                  "S.$": "$.cellId"
+                }
+              },
+              "UpdateExpression": "SET stackStatus = :s",
+              "ExpressionAttributeValues": {
+                ":s": {
+                  "S": "active"
+                }
+              }
+            },
+            "Next": "Pass (2)",
+            "ResultPath": null
+          },
+          "Pass (2)": {
+            "Type": "Pass",
+            "Next": "Success",
+            "Result": {
+              "cellId.$": "$.cellId",
+              "result": "success"
+            }
+          },
+          "Fail": {
+            "Type": "Fail"
+          },
+          "Success": {
+            "Type": "Succeed"
+          }
+        }
+      },
+      "ItemsPath": "$.cellIds",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Choice (2)",
+          "ResultPath": "$.error"
+        }
+      ],
+      "ResultPath": "$.map"
+    },
+    "Choice (3)": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.pipeline_id",
+          "IsPresent": true,
+          "Next": "PutJobSuccessResult"
+        }
+      ],
+      "Default": "Success (1)"
+    },
+    "PutJobSuccessResult": {
+      "Type": "Task",
+      "Parameters": {
+        "JobId.$": "$.pipeline_id"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:codepipeline:putJobSuccessResult",
+      "Next": "Success (1)"
+    },
+    "Choice (2)": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.pipeline_id",
+          "IsPresent": true,
+          "Next": "PutJobFailureResult (1)"
+        }
+      ],
+      "Default": "Fail (1)"
+    },
+    "PutJobFailureResult (1)": {
+      "Type": "Task",
+      "Next": "Fail (1)",
+      "Parameters": {
+        "FailureDetails": {
+          "Message": "Failed",
+          "Type": "JobFailed"
+        },
+        "JobId.$": "$.pipeline_id"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:codepipeline:putJobFailureResult"
+    },
+    "Fail (1)": {
+      "Type": "Fail"
+    },
+    "Success (1)": {
+      "Type": "Succeed"
+    }
+  }
+}

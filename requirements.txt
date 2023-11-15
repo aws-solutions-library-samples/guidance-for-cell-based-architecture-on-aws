@@ -1,0 +1,7 @@
+pyjwt
+requests
+fire
+boto3
+flask
+flask_httpauth
+pyyaml
