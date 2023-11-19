@@ -298,7 +298,7 @@ https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/rel_fault_
 
 | Date | Change |
 | ---- | ------ |
-| Nov 2023 | Initial release |
+| Dec 2023 | Initial release |
 
 # Notices
 
