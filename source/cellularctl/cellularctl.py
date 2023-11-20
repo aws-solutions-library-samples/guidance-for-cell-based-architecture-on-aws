@@ -110,8 +110,7 @@ class Router(object):
 class Setup:
     def deploy(self, createcells=False):
         """Deploy the solution to a new region or account."""
-        cellular.run_cmd('npm install aws-cdk-lib')
-        cellular.run_cmd('npm install', 'cdk')
+        cellular.run_cmd('npm ci', 'cdk')
         cellular.run_cmd('npm run build', 'cdk')
         cellular.run_cmd('cdk bootstrap', 'cdk')
         # cellular.run_cmd('cdk deploy Cellular-Repos', 'cdk')

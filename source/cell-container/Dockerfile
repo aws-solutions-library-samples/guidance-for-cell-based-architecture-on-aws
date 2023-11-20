@@ -5,7 +5,8 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl \
     && apt-get upgrade \
-    && apt-get clean
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --gid 9999 app \
   && useradd --uid 9999 --gid 9999 -m app
