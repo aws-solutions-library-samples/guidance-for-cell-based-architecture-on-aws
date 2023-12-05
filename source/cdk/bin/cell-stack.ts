@@ -10,7 +10,7 @@ import {
     StackProps
 } from 'aws-cdk-lib';
 import {Construct} from 'constructs';
-import * as synthetics from '@aws-cdk/aws-synthetics-alpha';
+import * as synthetics from 'aws-cdk-lib/aws-synthetics';
 import * as fs from 'fs';
 import {AclCidr, AclTraffic, Action, TrafficDirection} from "aws-cdk-lib/aws-ec2";
 
