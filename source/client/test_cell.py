@@ -25,7 +25,6 @@ class MyTestCase(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(self._testMethodName, self._testMethodName + '123')
 
-    # @unittest.skip("Not implemented yet")
     def test_put(self):
         self.client.put('key', 'value')
         item = cell_table.get_item(Key={

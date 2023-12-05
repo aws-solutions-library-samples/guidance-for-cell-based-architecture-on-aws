@@ -182,6 +182,20 @@ Note that most of these commands return before the update has fully finished dep
 
 ## Using the solution
 
+### Allowing ingress
+
+Inbound traffic is blocked per default to the public load balancers of the solution. In order to use the solution, you need to allow traffic from your public IP address into the solution. (Opening the solution to the public would also be an option, but is not encouraged for security reasons.) There is a managed prefix list that is referenced by all public load balancers. You can add your public IP address using this command.
+
+```bash
+# This will use checkip.amazonaws.com to retrive your public IP address
+./cellularctl setup allowingress
+
+# Or, if you want to specify your IP manually:
+myip=$(curl -4 checkip.amazonaws.com)
+./cellularctl setup allowingress $myip
+```
+
+
 ### Using the `clientctl` convenience tool
 
 The cell-based architecture operates as a key / value store where it partitions users across the cells.  To interact with the system begin by creating a couple of users:

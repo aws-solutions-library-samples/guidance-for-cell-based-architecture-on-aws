@@ -22,6 +22,7 @@ dynamodb = boto3.resource('dynamodb')
 stepfunction = boto3.client('stepfunctions')
 s3 = boto3.client('s3')
 ecs = boto3.client('ecs')
+ec2 = boto3.client('ec2')
 aws_lambda = boto3.client('lambda')
 synthetics = boto3.client('synthetics')
 
@@ -181,3 +182,25 @@ def get_users():
         get_cf_output('Cellular-Router', 'usersTable'))
     users = users_table.scan()
     return users
+
+def allow_ingress(ip):
+    prefixListID = get_cf_output('Cellular-Repos', 'inboundPrefixListId')
+    lists = ec2.describe_managed_prefix_lists(
+        Filters=[{
+            'Name': 'prefix-list-id',
+            'Values': [
+                prefixListID,
+            ]
+        },
+    ],)
+    version = lists['PrefixLists'][0]['Version']
+    print(version+1)
+    ec2.modify_managed_prefix_list(
+        PrefixListId=prefixListID,
+        AddEntries=[
+            {
+                'Cidr': ip+'/32',
+            },
+        ],
+        CurrentVersion = version
+    )

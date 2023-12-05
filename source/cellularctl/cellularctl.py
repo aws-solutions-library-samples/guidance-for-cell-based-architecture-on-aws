@@ -2,6 +2,7 @@ import os
 import fire
 import yaml
 import cellular
+import requests
 from datetime import datetime
 
 cdkRequireApproval = 'broadening'
@@ -132,6 +133,13 @@ class Setup:
 
     def tagnodelete(self):
         cellular.tagnodelete()
+
+    def allowingress(self, ip='myip'):
+        """Add an IP v4 address to the prefix list to allow inbound traffic.
+        Per default gets your IP address from https://checkip.amazonaws.com"""
+        if ip == 'myip':
+            ip = requests.get('https://checkip.amazonaws.com').text.strip()
+        cellular.allow_ingress(ip)
 
 
 class Repos:

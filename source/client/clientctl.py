@@ -6,7 +6,7 @@ import fire
 if not 'routerurl' in os.environ:
     print('Evironment variable "routerurl" not set.')
     print('Please use, .e.g.:')
-    print('export routerurl=http://$(./cellularctl router getdnsname)')
+    print('export routerurl=$(./cellularctl router getdnsname)')
     sys.exit(1)
 routerurl = os.environ['routerurl']
 
@@ -40,7 +40,7 @@ class Exec:
 
 
 class Main:
-    def register(self, username, cell=None):
+    def register(self, username):
         '''Registers a new users, optionally can specify the cell.
         Will create file "username.apikey"'''
         c = Client(routerurl, username)

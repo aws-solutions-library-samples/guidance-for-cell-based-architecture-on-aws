@@ -1,10 +1,8 @@
 import {
-    Stack, StackProps, aws_ecr as ecr, aws_s3 as s3, aws_lambda as lambda, aws_s3_deployment as s3_deploy
+    Stack, StackProps, aws_ecr as ecr, aws_ec2 as ec2
 } from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import * as cdk from 'aws-cdk-lib';
-import {Asset} from 'aws-cdk-lib/aws-s3-assets';
-import * as path from 'path';
 
 export class ReposStack extends Stack {
     constructor(scope: Construct, id: string, props?: StackProps) {
@@ -28,6 +26,15 @@ export class ReposStack extends Stack {
         new cdk.CfnOutput(this, 'repoRoutingUri', {
             value: repoRouting.repositoryUri,
             exportName: 'repoRoutingUri'
+        });
+
+        const prefixList = new ec2.PrefixList(this, 'inboundPrefixList', {
+            maxEntries: 20,
+        });
+
+        new cdk.CfnOutput(this, 'inboundPrefixListId', {
+            value: prefixList.prefixListId,
+            exportName: 'cellsInboundPrefixListId'
         });
     }
 }

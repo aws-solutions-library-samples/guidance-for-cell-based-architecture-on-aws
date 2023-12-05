@@ -9,14 +9,18 @@ class Client:
         self.dnsNameCell = None
 
     def request(self, uri, data=None):
-        r = requests.post('http://' + self.router + uri, json=data)
+        try:
+            r = requests.post('http://' + self.router + uri, json=data, timeout=5)
+        except requests.exceptions.ConnectTimeout:
+            print('Request timed out. Did you allow inbound traffic from your external IP? (See README.md)')
+            exit(1)
         self.check_request_status(r)
         return r
 
     def request_cell(self, uri, data=None):
         if not self.token:
             raise Exception('Not logged in.')
-        r = requests.post('http://' + self.dnsNameCell + uri, json=data,
+        r = requests.post('http://' + self.dnsNameCell + uri, json=data, timeout=5,
                           headers={'Authorization': 'Bearer ' + self.token})
         self.check_request_status(r)
         return r

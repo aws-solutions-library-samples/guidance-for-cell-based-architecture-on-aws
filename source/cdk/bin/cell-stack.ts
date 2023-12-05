@@ -173,8 +173,20 @@ export class CellStack extends Stack {
                     taskRole: taskRole,
                     executionRole: executionRole,
                 },
+                openListener: false,
             });
         service.targetGroup.setAttribute('deregistration_delay.timeout_seconds', '10');
+
+        const lbSecurityGroup = new ec2.SecurityGroup(this, 'lb-security-group', {
+            vpc,
+            description: 'Allow inbound prefix from the cell prefix list',
+            allowAllOutbound: false,
+        });
+        lbSecurityGroup.addIngressRule(
+            ec2.Peer.prefixList(cdk.Fn.importValue('cellsInboundPrefixListId')),
+            ec2.Port.tcp(80));
+        service.targetGroup.setAttribute('deregistration_delay.timeout_seconds', '10');
+        service.loadBalancer.addSecurityGroup(lbSecurityGroup)
 
         new cdk.CfnOutput(this, 'dnsName', {
             value: service.loadBalancer.loadBalancerDnsName,
