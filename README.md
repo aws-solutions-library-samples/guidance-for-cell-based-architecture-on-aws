@@ -12,7 +12,7 @@ A cell-based architecture, is an advanced resiliency architecture which creates 
 
 Other infrastructure techniques such as redundancy across AWS Availability Zones or across AWS Regions will protect against disruptions to individual server instances, disruption to an entire availability zone, or disruption to a regional AWS service.  But what about other types of disruption such as a malformed request, operator error, or a bad code deployment?
 
-These types of failures can be partially mitigated using techniques like canary deployments, static tests, code reviews and automation.  But they only reduce the likelyhood and at large scale even unlikely events can occur regularly.  Using a cell-based architecture to implement fault isolation will reduce the blast radius of these kinds of failures.
+These types of failures can be partially mitigated using techniques like canary deployments, static tests, code reviews and automation.  But they only reduce the likelihood and at large scale even unlikely events can occur regularly.  Using a cell-based architecture to implement fault isolation will reduce the blast radius of these kinds of failures.
 
 For example, if due to a human error a main database is wiped, this will only affect one cell. For 1000 users, that would be only around 0.1% of the users. Plus, recovering a database with 0.1% of the data is much faster than recovering one with 100% of the data. 
 
@@ -37,7 +37,7 @@ An additional benefit, aside from resilience to failure, is that the system natu
 
 ## Router
 
-In this soluton, clients first connect to the cell router. The router authenticates the user (or creates a new user if it's a registration request) and returns the DNS name of the customer's assigned cell. The client then makes any subsequent requests to through this DNS name. Note that this is only one way to implement a cell router. Different options are possible, for example ones that are transparent to the client or that work through DNS routing.
+In this solution, clients first connect to the cell router. The router authenticates the user (or creates a new user if it's a registration request) and returns the DNS name of the customer's assigned cell. The client then makes any subsequent requests to through this DNS name. Note that this is only one way to implement a cell router. Different options are possible, for example ones that are transparent to the client or that work through DNS routing.
 
 # Design Considerations
 
@@ -85,7 +85,7 @@ Moving to a cell-based architecture may require that the data architecture be re
 
 Other considerations include whether cells should be in individual AWS accounts.  Creating many AWS accounts can become unwieldy.  They need to integrate with the billing, monitoring, etc. But on the other hand multiple accounts limit the blast radius of events such as compromised account credentials or service limits.
 
-Consider whether authentication should occur at the cell or the router, and where should the credentials be stored?  Authentication can happen in the router or in the cells.  Having it in the cells limits the blast radius while performing authentication and authorisation at the routing layer adds simplicity.
+Consider whether authentication should occur at the cell or the router, and where should the credentials be stored?  Authentication can happen in the router or in the cells.  Having it in the cells limits the blast radius while performing authentication and authorization at the routing layer adds simplicity.
 
 With multi-layered architectures cells need to talk to cells in other layers.  A single Transit Gateway can orchestrate this but becomes a single point of failure.  If frontend cells can be limited to a small set of backend cells then bilateral connections can be used.
 
@@ -103,7 +103,7 @@ Disaster Recovery also needs to be reexamined.  Failover to a different region (
 1. Docker, python and npm need to be installed. 
 1. You need to have an AWS account and have permissions to run commands in it.
 1. The region needs to be set. (For example, by setting the environment variable AWS_REGION)
-1. The routing layer and each cell will create an Elastic IP, VPC and NAT Gateway. You may need to raise the limits on these resources. (An initial limit increase often is autoapproved within a few seconds.) See https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html for details. Any stacks that fail with a limit being exceed you will need to destroy and manually recreate. It is always recommended to monitor AWS service limits and proactively increase them when you start approaching one of them.
+1. The routing layer and each cell will create an Elastic IP, VPC and NAT Gateway. You may need to raise the limits on these resources. (An initial limit increase often is auto-approved within a few seconds.) See https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html for details. Any stacks that fail with a limit being exceed you will need to destroy and manually recreate. It is always recommended to monitor AWS service limits and proactively increase them when you start approaching one of them.
 
 ## Folder Structure
 
@@ -116,13 +116,20 @@ Disaster Recovery also needs to be reexamined.  Failover to a different region (
 
 ## Configure the `cellularctl`
 
-Most actions can be done via cellularctl. You need to install the required modules. A python venv can be created like this:
+Most actions can be done via cellularctl. You need to install the required modules. 
 
+A python venv can be created like this:
 ```
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+CDK can be installed globally like this:
+```
+npm install -g aws-cdk
+```
+
 
 Afterwards you can run cellularctl:
 
@@ -151,19 +158,19 @@ After updating the router CDK component run the following. This will trigger a C
 ./cellularctl router deploy
 ```
 
-After updating the router CDK component run the follwing. This will trigger generate a new CDK template and upload it to S3. This in turn will trigger a CodePipeline that first updates the sandbox cell, checks it for alivenss and then updates all other cells.
+After updating the router CDK component run the following. This will trigger generate a new CDK template and upload it to S3. This in turn will trigger a CodePipeline that first updates the sandbox cell, checks it for aliveness and then updates all other cells.
 
 ```
 ./cellularctl cell generate_template
 ```
 
-To build and push a new container for the cell router run the following. '--deploy' will trigger a refresh in ECS, so that the current deployement uses the image.
+To build and push a new container for the cell router run the following. '--deploy' will trigger a refresh in ECS, so that the current deployment uses the image.
 
 ```
 ./cellularctl router build --deploy
 ```
 
-To build and push a new container for the cells run the following. '--deploy' will trigger a refresh in ECS, so that the current deployement in each cell uses the image.
+To build and push a new container for the cells run the following. '--deploy' will trigger a refresh in ECS, so that the current deployment in each cell uses the image.
 
 ```
 ./cellularctl cell build --deploy
@@ -187,7 +194,7 @@ Note that most of these commands return before the update has fully finished dep
 Inbound traffic is blocked per default to the public load balancers of the solution. In order to use the solution, you need to allow traffic from your public IP address into the solution. (Opening the solution to the public would also be an option, but is not encouraged for security reasons.) There is a managed prefix list that is referenced by all public load balancers. You can add your public IP address using this command.
 
 ```bash
-# This will use checkip.amazonaws.com to retrive your public IP address
+# This will use checkip.amazonaws.com to retrieve your public IP address
 ./cellularctl setup allowingress
 
 # Or, if you want to specify your IP manually:
@@ -229,7 +236,7 @@ To see how the communication is handled you can use the `curl` command to intera
 ```bash
 # register a user3 with the system
 result=$(curl -X POST "$routerurl/register" -H 'Content-Type: application/json'  -d '{"username": "user3"}') 
-# store the apikey for next steps
+# store the api key for next steps
 user3apikey=$(echo $result | jq .apikey)
 
 # next login to the system to see which cell the user is assigned to
@@ -263,10 +270,10 @@ To get the cell assignment for a user (with name "username") run the following:
 
 ## Uninstalling the Solution
 
-In order to uninstall the solution, delete all CloudFormation staks that were created. You can use the following command to trigger a destroy action on all those stacks. 
+In order to uninstall the solution, delete all CloudFormation stacks that were created. You can use the following command to trigger a destroy action on all those stacks. 
 
 ```bash
-./cellularct setup destroy
+./cellularctl setup destroy
 ```
 
 Note that the command does not wait for the actions to finish. Be sure to go to the CloudFormation console and clean up any stacks that failed to destroy automatically.
@@ -342,5 +349,5 @@ in cell-stack.ts. Then execute the following:
 ```
 
 This will generate and upload a new version of the cell template which now contains a Network ACL that denies all outgoing traffic for all resources in the cell VPC.
-The new template will trigger an execution of the codepipeline. The deployment to the sandbox cell will be successfull but the canaries will fail afterwards and halt the deployment.
+The new template will trigger an execution of the codepipeline. The deployment to the sandbox cell will be successful but the canaries will fail afterwards and halt the deployment.
 Here, the canaries simulate a business metrics. For example, after a new deployment to a cell, a increase in support cases or a decrease in sales would be an indication that something is wrong and that the new change shouldn't be deployed to more cells.
