@@ -128,6 +128,16 @@ export class CellStack extends Stack {
                             "dynamodb:PutItem"
                         ],
                         resources: ['arn:aws:dynamodb:*:*:table/' + ddb_table.tableName],
+                    }), new iam.PolicyStatement({
+                        actions: [
+                            "secretsmanager:GetResourcePolicy",
+                            "secretsmanager:GetSecretValue",
+                            "secretsmanager:DescribeSecret",
+                            "secretsmanager:ListSecretVersionIds"
+                        ],
+                        resources: [
+                            cdk.Fn.importValue('cellsPublic')
+                        ],
                     })],
                 })
             }

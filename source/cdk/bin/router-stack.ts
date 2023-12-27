@@ -130,6 +130,17 @@ export class RouterStack extends Stack {
                         resources: [
                             '*'
                         ],
+                    }), new iam.PolicyStatement({
+                        actions: [
+                            "secretsmanager:GetResourcePolicy",
+                            "secretsmanager:GetSecretValue",
+                            "secretsmanager:DescribeSecret",
+                            "secretsmanager:ListSecretVersionIds"
+                        ],
+                        resources: [
+                            cdk.Fn.importValue('cellsPrivate'),
+                            cdk.Fn.importValue('cellsPublic')
+                        ],
                     })],
                 })
             }
@@ -324,6 +335,17 @@ export class RouterStack extends Stack {
                         resources: [
                             '*',
                         ],
+                    }), new iam.PolicyStatement({
+                        actions: [
+                            "secretsmanager:GetResourcePolicy",
+                            "secretsmanager:GetSecretValue",
+                            "secretsmanager:DescribeSecret",
+                            "secretsmanager:ListSecretVersionIds"
+                        ],
+                        resources: [
+                            cdk.Fn.importValue('cellsPrivate'),
+                            cdk.Fn.importValue('cellsPublic')
+                        ],
                     })
                     ],
                 })
@@ -337,7 +359,9 @@ export class RouterStack extends Stack {
                     image: lambda.Runtime.PYTHON_3_9.bundlingImage,
                     command: [
                         'bash', '-c',
-                        'pip install -r requirements.txt -t /asset-output && cp -au . /asset-output'
+                        'pip install --platform manylinux2014_aarch64 --implementation cp --python 3.9 --only-binary=:all: cryptography==37.0.4  -t /asset-output'+
+                        ' && pip install -r requirements.txt -t /asset-output'+
+                        ' && cp -ur . /asset-output'
                     ],
                 },
             }),

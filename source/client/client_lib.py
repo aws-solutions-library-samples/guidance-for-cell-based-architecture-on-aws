@@ -10,7 +10,6 @@ class Client:
 
     def request(self, uri, data=None):
         try:
-            print('http://' + self.router + uri)
             r = requests.post('http://' + self.router + uri, json=data, timeout=5)
         except requests.exceptions.ConnectTimeout:
             print('Request timed out. Did you allow inbound traffic from your external IP? (See README.md)')

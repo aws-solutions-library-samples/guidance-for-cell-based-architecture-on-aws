@@ -1,6 +1,6 @@
 import os
 import sys
-from client import Client
+from client_lib import Client
 import fire
 
 if not 'routerurl' in os.environ:
