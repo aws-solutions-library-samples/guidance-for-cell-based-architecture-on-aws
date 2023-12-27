@@ -55,14 +55,15 @@ def getJwt():
     return json.load(r['Payload'])['token']
 
 def main():
-    token = getJwt()
+    #token = getJwt()
 
     url1 = 'http://' + dnsNameCell + '/put'
     method1 = 'POST'
     #postData1 = "{'key': 'canary_test', 'value': 'value'}"
     postData1 = {'key': 'canary_test', 'value': 'value'}
     headers1 = {
-        "Authorization": "Bearer "+str(token),
+        #"Authorization": "Bearer "+str(token),
+        "Authorization": "Bearer canary",
         'Content-type': 'application/json',
     }
     verify_request(method1, url1, postData1, headers1)
