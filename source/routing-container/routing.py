@@ -6,6 +6,7 @@ import secrets
 
 dynamodb = boto3.resource('dynamodb')
 cloudformation = boto3.client('cloudformation')
+secretsmanager = boto3.client('secretsmanager')
 cells_table = dynamodb.Table(os.environ.get('cellsTableName'))
 users_table = dynamodb.Table(os.environ.get('usersTableName'))
 
@@ -60,3 +61,15 @@ def create_user(username):
         }
     )
     return apikey
+
+def get_jwt_private_key():
+    response = secretsmanager.get_secret_value(
+        SecretId='cellsJwtPrivateKey'
+    )
+    return response['SecretString']
+
+def get_jwt_public_key():
+    response = secretsmanager.get_secret_value(
+        SecretId='cellsJwtPublicKey'
+    )
+    return response['SecretString']

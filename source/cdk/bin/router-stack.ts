@@ -2,7 +2,7 @@ import {
     Stack, StackProps, aws_ecs_patterns as ecsPatterns, aws_ecs as ecs, aws_ec2 as ec2,
     aws_s3 as s3, aws_stepfunctions as sfn, aws_codepipeline as codepipeline,
     aws_codepipeline_actions as codepipeline_actions, aws_iam as iam, aws_dynamodb as dynamodb, aws_lambda as lambda,
-    aws_kinesis as kinesis
+    aws_kinesis as kinesis,
 } from 'aws-cdk-lib';
 import * as firehose from '@aws-cdk/aws-kinesisfirehose-alpha';
 import * as firehose_destinations from '@aws-cdk/aws-kinesisfirehose-destinations-alpha';

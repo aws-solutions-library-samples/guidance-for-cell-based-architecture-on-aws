@@ -1,4 +1,4 @@
 Flask
 boto3
-pyjwt
+pyjwt[crypto]
 Flask-HTTPAuth

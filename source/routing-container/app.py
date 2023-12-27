@@ -9,7 +9,7 @@ auth = HTTPTokenAuth(scheme='Bearer')
 
 @auth.verify_token
 def verify_token(token):
-    code = jwt.decode(token, 'secret', algorithms="HS256")
+    code = jwt.decode(token, routing.get_jwt_public_key(), algorithms="RS256")
     print(code, flush=True)
     # Todo check that this is the right cell.
     return code['username']
@@ -28,7 +28,6 @@ def cells():
 @app.route('/register', methods=['POST'])
 def register():
     r = request.get_json()
-    print(r, flush=True)
     username = r['username']
     if routing.get_user(username) is not None:
         return "User already exists", 409
@@ -46,15 +45,16 @@ def login():
     user = routing.get_user(r['username'])
     if user is None:
         return "Login failed", 401
-    print('User: '+str(user))
-    print('Request: '+str(r))
     if user['apikey'] != r['apikey']:
         return "Login failed", 401
     tokenDict = {
         'username': user['username'],
         'cell': user['cell']
     }
-    token = jwt.encode(tokenDict, 'secret', algorithm="HS256")
+    private_key = routing.get_jwt_private_key()
+    if private_key == 'undefined':
+        return "JWT key undefined. See documentation.", 500
+    token = jwt.encode(tokenDict, private_key, algorithm="RS256")
     return jsonify({
         'dns_name_cell': routing.get_dns_name(user['cell']),
         'token': token,

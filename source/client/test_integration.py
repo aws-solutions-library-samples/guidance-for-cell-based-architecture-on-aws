@@ -1,9 +1,9 @@
 import unittest
 from testlibs import get_cf_output, users_table
-from client import Client
+import client_lib
 
 
-class TestClient(Client):
+class TestClient(client_lib.Client):
     def __init__(self, router, username):
         super().__init__(router, username)
 
@@ -11,7 +11,7 @@ class TestClient(Client):
 class MyTestCase(unittest.TestCase):
     def setUp(self):
         server = 'http://' + get_cf_output('Cellular-Router', 'dnsName')
-        self.client = Client(server, self._testMethodName)
+        self.client = client_lib.Client(server, self._testMethodName)
 
     def test_put_and_get(self):
         self.client.register()

@@ -10,6 +10,7 @@ class Client:
 
     def request(self, uri, data=None):
         try:
+            print('http://' + self.router + uri)
             r = requests.post('http://' + self.router + uri, json=data, timeout=5)
         except requests.exceptions.ConnectTimeout:
             print('Request timed out. Did you allow inbound traffic from your external IP? (See README.md)')
@@ -49,9 +50,9 @@ class Client:
         try:
           res = self.request_cell('/get', data={'key': key})
         except requests.exceptions.HTTPError as e:
-          # 404 is a normal case here - return empty value.
+          # 404 is a normal case here - return an error
           if e.response.status_code == 404:
-            return ""
+            raise KeyError
           else:
             raise e
 

@@ -13,3 +13,13 @@ def get_cf_output(stackname, key):
 
 dynamodb = boto3.resource('dynamodb')
 users_table = dynamodb.Table(get_cf_output('Cellular-Router', 'usersTable'))
+
+def get_private_key():
+    with open("../../keys/jwtRS256.key") as f:
+        key = f.read()
+    return key
+
+def get_public_key():
+    with open("../../keys/jwtRS256.key.pub") as f:
+        key = f.read()
+    return key

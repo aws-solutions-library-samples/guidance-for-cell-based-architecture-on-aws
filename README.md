@@ -202,6 +202,17 @@ myip=$(curl -4 checkip.amazonaws.com)
 ./cellularctl setup allowingress $myip
 ```
 
+### Generating certificates
+
+The solution use JWT tokens which require an RS256 certificate. The public and private key need to be uploaded to AWS Secrets Manager. Secrets are already provisioned but without proper values. (Operations against will fail with 500 - Internal Server error until certificates are uploloaded.) To generate and upload a certificate, you can use the following: 
+
+```bash
+./cellularctl certificate generate
+./cellularctl certificate upload
+```
+
+Note that in a production environment, a secure certificate solution should be used instead.
+
 
 ### Using the `clientctl` convenience tool
 

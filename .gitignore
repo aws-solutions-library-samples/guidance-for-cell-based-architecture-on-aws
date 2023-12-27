@@ -21,3 +21,6 @@ source/cdk/templates/template_cell.yaml
 source/package.json
 source/package-lock.json
 .rtx.toml
+
+keys/*.key
+keys/*.key.pub

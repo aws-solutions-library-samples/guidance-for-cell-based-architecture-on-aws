@@ -1,5 +1,4 @@
 Flask
-redis-py-cluster
 boto3
-pyjwt
+pyjwt[crypto]
 flask_httpauth

@@ -1,15 +1,15 @@
 import unittest
 import requests.exceptions
-from testlibs import get_cf_output, dynamodb
+from testlibs import get_cf_output, dynamodb, get_private_key
 from boto3.dynamodb.conditions import Key
 import jwt
-from client import Client
+import client_lib
 
 cell_table = dynamodb.Table(get_cf_output('Cellular-Cell-sandbox', 'ddbTableName'))
 
 
-class TestClient(Client):
-    server = 'http://127.0.0.1:80'
+class TestClient(client_lib.Client):
+    server = '127.0.0.1:8080'
 
     def __init__(self, username, password):
         super().__init__(None, username, password)
@@ -18,7 +18,7 @@ class TestClient(Client):
             'username': username,
             'cell': 'Sandbox',
         }
-        self.token = jwt.encode(tokenDict, 'secret', algorithm="HS256")
+        self.token = jwt.encode(tokenDict, get_private_key(), algorithm="RS256")
 
 
 class MyTestCase(unittest.TestCase):
@@ -46,14 +46,14 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual('value2', self.client.get('key2'))
 
     def test_get_non_existing(self):
-        with self.assertRaises(requests.exceptions.HTTPError):
+        with self.assertRaises(KeyError):
             self.client.get('key1')
 
     def test_delete(self):
         self.client.put('key4', 'value')
         self.client.delete('key4')
-        with self.assertRaises(requests.exceptions.HTTPError):
-            self.client.get('key1')
+        with self.assertRaises(KeyError):
+            self.client.get('key4')
 
     def tearDown(self):
         rows = cell_table.query(
@@ -68,7 +68,7 @@ class MyTestCase(unittest.TestCase):
 
 
 server_remote = get_cf_output('Cellular-Router', 'dnsName')
-server_local = '127.0.0.1:80'
+server_local = '127.0.0.1:8080'
 TestClient.server = server_local
 
 if __name__ == '__main__':

@@ -11,11 +11,18 @@ table_name = os.environ.get('tableName')
 cell_id = os.environ.get('cellId')
 dynamodb = boto3.resource('dynamodb')
 ddb_table = dynamodb.Table(table_name)
+secretsmanager = boto3.client('secretsmanager')
+
+def get_jwt_public_key():
+    response = secretsmanager.get_secret_value(
+        SecretId='cellsJwtPublicKey'
+    )
+    return response['SecretString']
 
 
 @auth.verify_token
 def verify_token(token):
-    code = jwt.decode(token, 'secret', algorithms="HS256")
+    code = jwt.decode(token, get_jwt_public_key(), algorithms="RS256")
     print(code, flush=True)
     # Todo check that this is the right cell.
     return code['username']

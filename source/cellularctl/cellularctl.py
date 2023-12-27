@@ -188,6 +188,12 @@ class User:
             'User "{}" does not exist'.format(username)
         print(user['cell'])
 
+class Certificate:
+    def generate(self):
+        cellular.generate_certificates()
+
+    def upload(self):
+        cellular.upload_certificates()
 
 class Main:
     def cell(self):
@@ -208,8 +214,11 @@ class Main:
     def setup(self):
         return Setup
 
-    def canary(selfs):
+    def canary(self):
         return Canary
+    
+    def certificate(self):
+        return Certificate
 
 
 if __name__ == '__main__':

@@ -25,6 +25,7 @@ ecs = boto3.client('ecs')
 ec2 = boto3.client('ec2')
 aws_lambda = boto3.client('lambda')
 synthetics = boto3.client('synthetics')
+secretsmanager = boto3.client('secretsmanager')
 
 
 def run_cmd(cmd, dir=''):
@@ -74,14 +75,14 @@ def get_aws_env():
     env = dict()
     for key in ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
                 'AWS_SESSION_TOKEN']:
-        if os.environ[key]:
+        if key in os.environ.keys():
             env[key] = os.environ[key]
     return env
 
 
 def run_local(dir, env):
     run_cmd(f'{docker} build --tag {dir} .', dir)
-    command = [docker, 'run', '-i', '-t', '-p', '80:80']
+    command = [docker, 'run', '-i', '-t', '-p', '8080:8080']
     env['AWS_DEFAULT_REGION'] = boto3.session.Session().region_name
     env.update(get_aws_env())
     for k, v in env.items():
@@ -203,4 +204,22 @@ def allow_ingress(ip):
             },
         ],
         CurrentVersion = version
+    )
+
+def generate_certificates():
+    run_cmd("ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key", '../keys')
+
+def upload_certificates():
+    with open("keys/jwtRS256.key") as f:
+        private_key = f.read()
+    with open("keys/jwtRS256.key.pub") as f:
+        public_key = f.read()
+
+    secretsmanager.update_secret(
+        SecretId='cellsJwtPrivateKey',
+        SecretString=private_key
+    )
+    secretsmanager.update_secret(
+        SecretId='cellsJwtPublicKey',
+        SecretString=public_key
     )

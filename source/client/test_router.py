@@ -1,13 +1,13 @@
 import requests
 import unittest
 import jwt
-from testlibs import users_table, get_cf_output
-import client as client
+from testlibs import users_table, get_cf_output, get_public_key
+import client_lib
 
 tc = unittest.TestCase()
 
 
-class TestClient(client.Client):
+class TestClient(client_lib.Client):
     def __init__(self, router, username):
         super().__init__(router, username)
         self.expected_status = None
@@ -22,7 +22,7 @@ class TestClient(client.Client):
 
 
 class Test_Router(unittest.TestCase):
-    server = 'http://127.0.0.1:80'
+    server = '127.0.0.1:8080'
 
     def userid(self):
         return self._testMethodName
@@ -61,17 +61,17 @@ class Test_Router(unittest.TestCase):
 
     def test_register_and_login(self):
         self.addUser('test2@test.com')
-        r = requests.post(self.server + '/login',
+        r = requests.post('http://' + self.server + '/login',
                           json={'username': 'test2@test.com', 'apikey': self.apikey()})
         self.assertEqual(r.status_code, 200)
-        token = jwt.decode(r.json()['token'], 'secret', algorithms="HS256")
+        token = jwt.decode(r.json()['token'], get_public_key(), algorithms="RS256")
         self.assertEqual(token['username'], 'test2@test.com')
         self.assertEqual(token['cell'], 'sandbox')
 
     def test_register_and_login2(self):
         self.addUser(self.userid())
         self.client.login()
-        token = jwt.decode(self.client.token, 'secret', algorithms="HS256")
+        token = jwt.decode(self.client.token, get_public_key(), algorithms="RS256")
         self.assertEqual(token['username'], self.userid())
         self.assertEqual(token['cell'], 'sandbox')
         self.assertIsNotNone(self.client.dnsNameCell)
@@ -117,8 +117,8 @@ class Test_Router(unittest.TestCase):
             users_table.delete_item(Key={'username': user})
 
 
-server_remote = 'http://' + get_cf_output('Cellular-Router', 'dnsName')
-server_local = 'http://127.0.0.1:80'
+server_remote = get_cf_output('Cellular-Router', 'dnsName')
+server_local = '127.0.0.1:8080'
 Test_Router.server = server_local
 
 if __name__ == '__main__':
