@@ -97,14 +97,6 @@ export class CellStack extends Stack {
             runtime: new synthetics.Runtime('syn-python-selenium-1.3', synthetics.RuntimeFamily.PYTHON),
             timeToLive: cdk.Duration.hours(1),
         });
-
-        canary.role.attachInlinePolicy(new iam.Policy(this, 'userpool-policy', {
-            statements: [new iam.PolicyStatement({
-                actions: ['lambda:InvokeFunction'],
-                // TODO restrict this to canary-creat-token
-                resources: ['*'],
-            })],
-        }))
     }
 
     ecs_service(vpc: ec2.Vpc, cell_id: cdk.CfnParameter, image_uri: cdk.CfnParameter, ddb_table: dynamodb.Table)
