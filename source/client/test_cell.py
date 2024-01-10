@@ -1,8 +1,6 @@
 import unittest
-import requests.exceptions
-from testlibs import get_cf_output, dynamodb, get_private_key
+from testlibs import get_cf_output, dynamodb
 from boto3.dynamodb.conditions import Key
-import jwt
 import client_lib
 
 cell_table = dynamodb.Table(get_cf_output('Cellular-Cell-sandbox', 'ddbTableName'))
@@ -11,19 +9,14 @@ cell_table = dynamodb.Table(get_cf_output('Cellular-Cell-sandbox', 'ddbTableName
 class TestClient(client_lib.Client):
     server = '127.0.0.1:8080'
 
-    def __init__(self, username, password):
-        super().__init__(None, username, password)
+    def __init__(self, username):
+        super().__init__(None, username)
         self.dnsNameCell = TestClient.server
-        tokenDict = {
-            'username': username,
-            'cell': 'Sandbox',
-        }
-        self.token = jwt.encode(tokenDict, get_private_key(), algorithm="RS256")
 
 
 class MyTestCase(unittest.TestCase):
     def setUp(self):
-        self.client = TestClient(self._testMethodName, self._testMethodName + '123')
+        self.client = TestClient(self._testMethodName)
 
     def test_put(self):
         self.client.put('key', 'value')

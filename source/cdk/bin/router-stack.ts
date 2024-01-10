@@ -130,17 +130,6 @@ export class RouterStack extends Stack {
                         resources: [
                             '*'
                         ],
-                    }), new iam.PolicyStatement({
-                        actions: [
-                            "secretsmanager:GetResourcePolicy",
-                            "secretsmanager:GetSecretValue",
-                            "secretsmanager:DescribeSecret",
-                            "secretsmanager:ListSecretVersionIds"
-                        ],
-                        resources: [
-                            cdk.Fn.importValue('cellsPrivate'),
-                            cdk.Fn.importValue('cellsPublic')
-                        ],
                     })],
                 })
             }
@@ -334,17 +323,6 @@ export class RouterStack extends Stack {
                         ],
                         resources: [
                             '*',
-                        ],
-                    }), new iam.PolicyStatement({
-                        actions: [
-                            "secretsmanager:GetResourcePolicy",
-                            "secretsmanager:GetSecretValue",
-                            "secretsmanager:DescribeSecret",
-                            "secretsmanager:ListSecretVersionIds"
-                        ],
-                        resources: [
-                            cdk.Fn.importValue('cellsPrivate'),
-                            cdk.Fn.importValue('cellsPublic')
                         ],
                     })
                     ],

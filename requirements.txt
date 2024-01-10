@@ -1,4 +1,3 @@
-pyjwt[crpyto]
 requests
 fire
 boto3

@@ -33,28 +33,5 @@ export class ReposStack extends Stack {
             value: prefixList.prefixListId,
             exportName: 'cellsInboundPrefixListId'
         });
-
-        this.ssl_secrets()
-    }
-
-    ssl_secrets() {
-        const privateKeySecret = new secretsmanager.Secret(this, 'PrivateKeySecret', {
-            secretName: "cellsJwtPrivateKey",
-            secretStringValue: cdk.SecretValue.unsafePlainText("undefined")
-        });
-        new cdk.CfnOutput(this, 'privateKeyArn', {
-            value: privateKeySecret.secretArn,
-            exportName: 'cellsPrivate'
-        });
-
-
-        const publicKeySecret = new secretsmanager.Secret(this, 'PublicKeySecret', {
-            secretName: "cellsJwtPublicKey",
-            secretStringValue: cdk.SecretValue.unsafePlainText("undefined")
-        });
-        new cdk.CfnOutput(this, 'publicKeyArn', {
-            value: publicKeySecret.secretArn,
-            exportName: 'cellsPublic'
-        });
     }
 }

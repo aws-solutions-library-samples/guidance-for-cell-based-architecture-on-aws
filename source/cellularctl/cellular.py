@@ -205,21 +205,3 @@ def allow_ingress(ip):
         ],
         CurrentVersion = version
     )
-
-def generate_certificates():
-    run_cmd("ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key", '../keys')
-
-def upload_certificates():
-    with open("keys/jwtRS256.key") as f:
-        private_key = f.read()
-    with open("keys/jwtRS256.key.pub") as f:
-        public_key = f.read()
-
-    secretsmanager.update_secret(
-        SecretId='cellsJwtPrivateKey',
-        SecretString=private_key
-    )
-    secretsmanager.update_secret(
-        SecretId='cellsJwtPublicKey',
-        SecretString=public_key
-    )
