@@ -2,6 +2,7 @@ import boto3
 
 cf_client = boto3.client('cloudformation')
 
+
 def get_cf_output(stackname, key):
     response = cf_client.describe_stacks(StackName=stackname)
     outputs = response["Stacks"][0]["Outputs"]
@@ -13,13 +14,3 @@ def get_cf_output(stackname, key):
 
 dynamodb = boto3.resource('dynamodb')
 users_table = dynamodb.Table(get_cf_output('Cellular-Router', 'usersTable'))
-
-def get_private_key():
-    with open("../../keys/jwtRS256.key") as f:
-        key = f.read()
-    return key
-
-def get_public_key():
-    with open("../../keys/jwtRS256.key.pub") as f:
-        key = f.read()
-    return key

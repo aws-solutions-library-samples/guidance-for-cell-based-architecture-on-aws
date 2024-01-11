@@ -1,11 +1,10 @@
 import requests
 
+
 class Client:
-    def __init__(self, router, username, apikey=None):
+    def __init__(self, router, username):
         self.router = router
         self.username = username
-        self.apikey = apikey
-        self.token = None
         self.dnsNameCell = None
 
     def request(self, uri, data=None):
@@ -18,10 +17,10 @@ class Client:
         return r
 
     def request_cell(self, uri, data=None):
-        if not self.token:
+        if not self.dnsNameCell:
             raise Exception('Not logged in.')
         r = requests.post('http://' + self.dnsNameCell + uri, json=data, timeout=5,
-                          headers={'Authorization': 'Bearer ' + self.token})
+                          headers={'Authorization': 'Bearer ' + self.username})
         self.check_request_status(r)
         return r
 
@@ -30,16 +29,12 @@ class Client:
 
     def register(self):
         r = self.request('/register', {'username': self.username})
-        j = r.json()
-        self.apikey = j['apikey']
 
     def login(self):
         r = self.request('/login', {
             'username': self.username,
-            'apikey': self.apikey
         })
         j = r.json()
-        self.token = j['token']
         self.dnsNameCell = j['dns_name_cell']
 
     def put(self, key, value):

@@ -59,8 +59,6 @@ export class RouterStack extends Stack {
 
         this.codePipeline(bucket, updateCellsSm, checkCanarySm, pipelineLambda)
 
-        this.tokenLambda()
-
         this.dataLakeStream(bucket)
     }
 
@@ -129,17 +127,6 @@ export class RouterStack extends Stack {
                         ],
                         resources: [
                             '*'
-                        ],
-                    }), new iam.PolicyStatement({
-                        actions: [
-                            "secretsmanager:GetResourcePolicy",
-                            "secretsmanager:GetSecretValue",
-                            "secretsmanager:DescribeSecret",
-                            "secretsmanager:ListSecretVersionIds"
-                        ],
-                        resources: [
-                            cdk.Fn.importValue('cellsPrivate'),
-                            cdk.Fn.importValue('cellsPublic')
                         ],
                     })],
                 })
@@ -317,58 +304,6 @@ export class RouterStack extends Stack {
                 'templateUrl': 'https://' + bucket.bucketRegionalDomainName + '/template_cell.yaml',
                 'updateCellsFunctionArn': updateCellsFunction.stateMachineArn,
                 'templateBucketName': bucket.bucketRegionalDomainName,
-            }
-        });
-    }
-
-    tokenLambda() {
-        const role = new iam.Role(this, 'CanaryTokenLambdaRole', {
-            assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
-            inlinePolicies: {
-                'policy': new iam.PolicyDocument({
-                    statements: [new iam.PolicyStatement({
-                        actions: [
-                            "logs:CreateLogGroup",
-                            "logs:CreateLogStream",
-                            "logs:PutLogEvents",
-                        ],
-                        resources: [
-                            '*',
-                        ],
-                    }), new iam.PolicyStatement({
-                        actions: [
-                            "secretsmanager:GetResourcePolicy",
-                            "secretsmanager:GetSecretValue",
-                            "secretsmanager:DescribeSecret",
-                            "secretsmanager:ListSecretVersionIds"
-                        ],
-                        resources: [
-                            cdk.Fn.importValue('cellsPrivate'),
-                            cdk.Fn.importValue('cellsPublic')
-                        ],
-                    })
-                    ],
-                })
-            }
-        });
-
-        return new lambda.Function(this, 'CanaryTokenLambda', {
-            functionName: 'cellCanaryToken',
-            code: lambda.Code.fromAsset(path.join(__dirname, '../canary-token-lambda'), {
-                bundling: {
-                    image: lambda.Runtime.PYTHON_3_9.bundlingImage,
-                    command: [
-                        'bash', '-c',
-                        'pip install --platform manylinux2014_aarch64 --implementation cp --python 3.9 --only-binary=:all: cryptography==37.0.4  -t /asset-output'+
-                        ' && pip install -r requirements.txt -t /asset-output'+
-                        ' && cp -ur . /asset-output'
-                    ],
-                },
-            }),
-            runtime: lambda.Runtime.PYTHON_3_9,
-            handler: 'canary-token.handler',
-            role: role,
-            environment: {
             }
         });
     }

@@ -45,24 +45,11 @@ def verify_request(method, url, post_data=None, headers={}):
     logger.info("HTTP request successfully executed")
     conn.close()
 
-
-def getJwt():
-    aws_lambda = boto3.client('lambda')
-    r = aws_lambda.invoke(
-        FunctionName='cellCanaryToken',
-        Payload=json.dumps({ 'cellid': cellid }),
-    )
-    return json.load(r['Payload'])['token']
-
 def main():
-    #token = getJwt()
-
     url1 = 'http://' + dnsNameCell + '/put'
     method1 = 'POST'
-    #postData1 = "{'key': 'canary_test', 'value': 'value'}"
     postData1 = {'key': 'canary_test', 'value': 'value'}
     headers1 = {
-        #"Authorization": "Bearer "+str(token),
         "Authorization": "Bearer canary",
         'Content-type': 'application/json',
     }

@@ -11,11 +11,9 @@ if not 'routerurl' in os.environ:
 routerurl = os.environ['routerurl']
 
 def login(username):
-    with open("{}.apikey".format(username)) as f:
-        apikey = f.read()
-        c = Client(routerurl, username, apikey)
-        c.login()
-        return c
+    c = Client(routerurl, username)
+    c.login()
+    return c
 
 class Exec:
     def validate(self, username):
@@ -45,8 +43,6 @@ class Main:
         Will create file "username.apikey"'''
         c = Client(routerurl, username)
         c.register()
-        with open("{}.apikey".format(username), 'x') as f:
-            f.write(c.apikey)
 
     def exec(self):
         '''Execute a command against the server. Each command first logs in to the router.

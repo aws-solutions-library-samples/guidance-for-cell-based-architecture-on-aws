@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 import os
 import boto3
-import jwt
 from flask_httpauth import HTTPTokenAuth
 
 app = Flask(__name__)
@@ -11,23 +10,11 @@ table_name = os.environ.get('tableName')
 cell_id = os.environ.get('cellId')
 dynamodb = boto3.resource('dynamodb')
 ddb_table = dynamodb.Table(table_name)
-secretsmanager = boto3.client('secretsmanager')
-
-def get_jwt_public_key():
-    response = secretsmanager.get_secret_value(
-        SecretId='cellsJwtPublicKey'
-    )
-    return response['SecretString']
-
 
 @auth.verify_token
 def verify_token(token):
-    if token == 'canary':
-        return 'canary'
-    code = jwt.decode(token, get_jwt_public_key(), algorithms="RS256")
-    print(code, flush=True)
-    # Todo check that this is the right cell.
-    return code['username']
+    # Token is the user name. For a production environment, replace this with an authorisation mechanism such as JWT
+    return token
 
 
 @app.route('/')

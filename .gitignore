@@ -16,11 +16,7 @@ out
 cdk.out
 
 source/cdk/templates/template_cell.yaml
-*.apikey
 
 source/package.json
 source/package-lock.json
 .rtx.toml
-
-keys/*.key
-keys/*.key.pub
