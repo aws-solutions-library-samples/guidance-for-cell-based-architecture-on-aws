@@ -94,7 +94,7 @@ export class CellStack extends Stack {
             },
             schedule: synthetics.Schedule.rate(cdk.Duration.minutes(1)),
             startAfterCreation: true,
-            runtime: new synthetics.Runtime('syn-python-selenium-1.3', synthetics.RuntimeFamily.PYTHON),
+            runtime: new synthetics.Runtime('syn-python-selenium-4.0', synthetics.RuntimeFamily.PYTHON),
             timeToLive: cdk.Duration.hours(1),
         });
     }
